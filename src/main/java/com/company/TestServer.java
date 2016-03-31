@@ -25,7 +25,7 @@ import javax.imageio.*;
 
 public class TestServer extends AbstractHandler{
 
-    static int cnt = 0;
+    private static int cnt = 0;
 
     private BufferedImage decodeB64Image(String imgStr)
     {

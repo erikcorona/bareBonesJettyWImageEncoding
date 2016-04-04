@@ -27,6 +27,17 @@ public class TestServer extends AbstractHandler{
 
     private static int cnt = 0;
 
+    private void writeImgToFile(BufferedImage img)
+    {
+        cnt++;
+        File outputFile = new File("image" + cnt + ".jpg");
+        try {
+            ImageIO.write(img, "jpg", outputFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    @org.jetbrains.annotations.Nullable
     private BufferedImage decodeB64Image(String imgStr)
     {
         imgStr = imgStr.split(",")[1];
@@ -49,13 +60,6 @@ public class TestServer extends AbstractHandler{
             return null;
         }
 
-        cnt++;
-        File outputFile = new File("image" + cnt + ".jpg");
-        try {
-            ImageIO.write(img, "jpg", outputFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         return img;
     }
 
@@ -77,6 +81,7 @@ public class TestServer extends AbstractHandler{
         System.exit(111);
         return "";
     }
+
     private static String getImageB64()
     {
         BufferedImage img = null;
@@ -98,6 +103,17 @@ public class TestServer extends AbstractHandler{
         server.start();
         server.join();
         System.out.println("Test");
+    }
+
+    static private JsonObject getImgSets()
+    {
+        JsonObject ret = new JsonObject();
+        JsonArray names = new JsonArray();
+
+        for(int i = 1; i <= 20; i++)
+            names.add("Set_" + i);
+        ret.add("sets", names);
+        return ret;
     }
 
     public void handle(String s, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
@@ -127,6 +143,9 @@ public class TestServer extends AbstractHandler{
                     break;
                 case "saveImages":
                     retObj = saveImages(obj.get("content").getAsJsonObject());
+                    break;
+                case "imageSets":
+                    retObj = getImgSets();
                     break;
                 default:
                     System.err.println("Problem: Request Not Supported");
@@ -158,8 +177,10 @@ public class TestServer extends AbstractHandler{
 
         ArrayList<BufferedImage> imgs = extractBase64Images(content.get("images").getAsJsonArray());
         for(BufferedImage img : imgs)
+        {
             System.out.println(img.getWidth() + " x " + img.getHeight());
-        ret.add("response", "ok");
+            writeImgToFile(img);
+        }
 
         return ret;
     }

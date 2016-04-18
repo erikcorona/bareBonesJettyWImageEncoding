@@ -12,10 +12,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.sql.*;
 import java.util.ArrayList;
 
 import sun.misc.BASE64Decoder;
@@ -24,6 +22,14 @@ import sun.misc.BASE64Encoder;
 import javax.imageio.*;
 
 public class TestServer extends AbstractHandler{
+
+    static String db, user, pass;
+    static{
+        JsonObject cred = readCredentials();
+        db = cred.get("db").getAsString();
+        user  = cred.get("user").getAsString();
+        pass  = cred.get("pass").getAsString();
+    }
 
     private static int cnt = 0;
 
@@ -97,6 +103,7 @@ public class TestServer extends AbstractHandler{
 
     public static void main(String[] args) throws Exception{
 
+        saveImagesToDB();
         Server server = new Server(8088);
 
         server.setHandler(new TestServer());
@@ -166,6 +173,47 @@ public class TestServer extends AbstractHandler{
         return imgs;
     }
 
+    private static JsonObject readCredentials()
+    {
+        try {
+            BufferedReader in = new BufferedReader(new FileReader("json/credentials.json"));
+            String jsonText = "";
+            while(in.ready())
+                jsonText += in.readLine();
+
+            return new JsonParser().parse(jsonText).getAsJsonObject();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            System.err.println("ERROR!: File not found!");
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("ERROR!: Could not read line from file!");
+        }
+
+        return null;
+    }
+
+    static void saveImagesToDB() {
+//        String setName = json.get("setName").getAsString();
+        try {
+            System.err.println(db);
+            System.err.println(user);
+            System.err.println(pass);
+            Connection conn = DriverManager.getConnection(db+"?useSSL=false", user, pass);
+            Statement stmt = conn.createStatement();
+            String sq = "SELECT * FROM imagein.images";
+            ResultSet rs = stmt.executeQuery(sq);
+            while(rs.next()){
+                System.err.println("Found set:" + rs.getString("setName"));
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error when getting a connection to the sql sever");
+        }
+    }
 
     private JsonObject saveImages(JsonObject content) {
         JsonObject ret = new JsonObject();
@@ -175,6 +223,7 @@ public class TestServer extends AbstractHandler{
             return ret;
         }
 
+//        saveImagesToDB(content);
         ArrayList<BufferedImage> imgs = extractBase64Images(content.get("images").getAsJsonArray());
         for(BufferedImage img : imgs)
         {

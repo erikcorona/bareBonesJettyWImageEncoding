@@ -190,7 +190,6 @@ public class TestServer extends AbstractHandler{
             e.printStackTrace();
             System.err.println("ERROR!: Could not read line from file!");
         }
-
         return null;
     }
 
@@ -207,8 +206,6 @@ public class TestServer extends AbstractHandler{
             while(rs.next()){
                 System.err.println("Found set:" + rs.getString("setName"));
             }
-
-
         } catch (SQLException e) {
             e.printStackTrace();
             System.err.println("Error when getting a connection to the sql sever");
